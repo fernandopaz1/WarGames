@@ -17,14 +17,16 @@ juegaURSS db "Juega SOVIET UNION: ",10,13,"$"
 msjx db "Ingrese coordenada x:  ","$"
 msjy db 10,13,"Ingrese coordenada y:  ","$"
          
-latitud db 0
-longitud db 0  
+latitud db ?,?,"$"
+longitud db ?,?,"$"
 
 buffer db 3 dup(?)
 cantDigitos db 2           
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
+
 proc  printMap
     mov ah,09
     mov dx,offset mapaArriba
@@ -34,8 +36,6 @@ proc  printMap
     int 21h
     endp
 ret 
-    
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Decide quien juega
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -69,28 +69,25 @@ ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                 Pide Latitud
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
-         
 
-proc pedirLatitud
-    mov ah,09h                         ;Imprime el mensaje ingresar coordenada y
-    mov dx, offset msjy
+proc pedirLatitud    ;pedimos 2 números con la instrucción 0ah. Pide la cantidad de caracteres que entra en el buffer. 
+    mov ah,09h
+    mov dx, offset msjy                ;Imprime el mensaje ingresar coordenada x
     int 21h
-
-     
-    mov bx, offset latitud ;definimos a bx como puntero
-    sub cl,cl
     
-    mov ah, 1   
-     
-    pedirNumero:
-        int 21h 
-        mov [bx], al     
-        
-        inc cl ; es un contador
-        inc bx
-        cmp cl, cantDigitos
-    je pedirNumero   
+    mov dx, offset buffer
+    mov ah, 0ah
+    int 21h
     
+    xor bx, bx              ;Limpia bx
+	mov bl, buffer[0]          ;Copia lo que hay en buffer a bl   
+    mov bh, buffer[1]          ;Copia lo que hay en buffer a bl   	
+;	mov buffer[bx+2], '$'         ; Lo guarda en bx    
+;	mov latitud, bl                ; guardamos en la etiqueta latitud lo que hay en bl. O sea, el primer digito del numero
+;	mov latitud[1],bh              ;   guardamos en la etiqueta latitud lo que hay en bx. O sea, el segundo digito del numero
+	
+    
+     
 endp
 ret
          
@@ -100,27 +97,27 @@ ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
          
 proc pedirLongitud
-    mov ah,09h
+     mov ah,09h
     mov dx, offset msjx                ;Imprime el mensaje ingresar coordenada x
     int 21h
-   
-    mov bx, offset longitud
-    sub cl, cl  ;limpia cl  
     
-    mov ah, 1         
+    mov dx, offset buffer
+    mov ah, 0ah
+    int 21h
     
-    pedirNumero2:
-        int 21h
-        mov [bx], al
-        inc cl
-        inc bx
-        cmp cl, cantDigitos 
-     je pedirNumero2 
+    xor bx, bx              ;Limpia bx
+	mov bl, buffer[1]          ;Copia lo que hay en buffer a bl
+	mov bh, buffer[2]         ; Lo guarda en bx    
+	mov longitud[0], bl                ; guardamos en la etiqueta longitud lo que hay en bl. O sea, el primer digito del numero
+	mov longitud[1],bh             ;   guardamos en la etiqueta longitud lo que hay en bx. O sea, el segundo digito del numero
+	
+    
+     
 endp
 ret
                            
 proc pedirCoordenada
- ;   call pedirLongitud
+ ;;  call pedirLongitud
   call pedirLatitud
     endp
 ret          
