@@ -23,6 +23,12 @@ longitud db ?,?,"$"
 buffer db 3 dup(?)
 cantDigitos db 2           
 
+base db 1 
+
+diez db 10   
+valor db ?   
+valorLong db  ?
+valorLat db ?
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -70,60 +76,98 @@ ret
 ;                 Pide Latitud
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
 
-proc pedirLatitud    ;pedimos 2 números con la instrucción 0ah. Pide la cantidad de caracteres que entra en el buffer. 
-    mov ah,09h
-    mov dx, offset msjy                ;Imprime el mensaje ingresar coordenada x
-    int 21h
+   ;pedimos 2 números con la instrucción 0ah. Pide la cantidad de caracteres que entra en el buffer. 
+ proc pedirLatitud  
+    mov ah,09
+    mov dx,offset msjy
+    int 21h 
     
-    mov dx, offset buffer
-    mov ah, 0ah
-    int 21h
-    
-    xor bx, bx              ;Limpia bx
-	mov bl, buffer[0]          ;Copia lo que hay en buffer a bl   
-    mov bh, buffer[1]          ;Copia lo que hay en buffer a bl   	
-;	mov buffer[bx+2], '$'         ; Lo guarda en bx    
-;	mov latitud, bl                ; guardamos en la etiqueta latitud lo que hay en bl. O sea, el primer digito del numero
-;	mov latitud[1],bh              ;   guardamos en la etiqueta latitud lo que hay en bx. O sea, el segundo digito del numero
-	
+    mov bx, offset latitud ;definimos a bx como putero
+    sub cl,cl
+    mov ah, 01h   
     
      
+    pedirNumero:
+        int 21h 
+        mov [bx], al     
+        inc cl ; es un contador
+        inc bx
+        cmp cl, cantDigitos
+        je fin
+    jmp pedirNumero   
+fin:     
+    mov bx, offset latitud
+    call deAsciiAEntero
+    mov valorLat, ah
 endp
 ret
+
          
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                 Pide Longitud
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
          
-proc pedirLongitud
-     mov ah,09h
-    mov dx, offset msjx                ;Imprime el mensaje ingresar coordenada x
-    int 21h
+
+proc pedirLongitud  
+    mov ah,09
+    mov dx,offset msjx
+    int 21h       
     
-    mov dx, offset buffer
-    mov ah, 0ah
-    int 21h
+    mov bx, offset longitud
+    sub cl, cl  ;limpia cl
+    mov ah, 1           
     
-    xor bx, bx              ;Limpia bx
-	mov bl, buffer[1]          ;Copia lo que hay en buffer a bl
-	mov bh, buffer[2]         ; Lo guarda en bx    
-	mov longitud[0], bl                ; guardamos en la etiqueta longitud lo que hay en bl. O sea, el primer digito del numero
-	mov longitud[1],bh             ;   guardamos en la etiqueta longitud lo que hay en bx. O sea, el segundo digito del numero
-	
-    
-     
+    pedirNumero2:
+        int 21h
+        mov [bx], al
+        inc cl
+        inc bx
+        cmp cl, cantDigitos 
+        je fin2 
+     jmp pedirNumero2
+fin2: 
+    mov bx, offset longitud
+    call deAsciiAEntero
+
+    mov valorLong, ah
 endp
 ret
                            
 proc pedirCoordenada
- ;;  call pedirLongitud
+  call pedirLongitud
   call pedirLatitud
     endp
 ret          
-
-
-
+                   
+ ;;;;;;;
+ ;            Antes de llamar a esta funcion hacer mov bx, offset etiqueta a transformar
+ 
+ ;;; Guarda el resultado transformado en AH;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;,;,,;,,;
+proc deAsciiAEntero
+    sub cl, cl
+    add bx, 1  
+    mov valor, 0   ;; limpiamos valor para que cuando tenga otro llamado este limpia.
+    ciclo:
+        mov al, [bx]
+        sub al, 30h
+        mul base
+        add valor, al
+        mov al, base
+        mul diez
+        mov base, al
+        dec bx
+        inc cl
+        cmp cl, cantDigitos
+        je fin3
+     jmp ciclo
+fin3:
+    mov base,1
+    mov ah, valor 
+endp 
+ret
+    
 
 inicio:
     call printMap
