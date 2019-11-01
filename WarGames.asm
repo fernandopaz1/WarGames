@@ -70,19 +70,13 @@ ret
     
 endp
 ret                            
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                 Pide Latitud
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
-
-   ;pedimos 2 números con la instrucción 0ah. Pide la cantidad de caracteres que entra en el buffer. 
- proc pedirLatitud  
-    mov ah,09
-    mov dx,offset msjy
-    int 21h 
-    
-    mov bx, offset latitud ;definimos a bx como putero
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;              Pide dos digitos
+;
+; bx: offset de la etiqueda donde se guardan los digitos
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+proc pedirDosDigitos    
     sub cl,cl
     mov ah, 01h   
     
@@ -95,7 +89,25 @@ ret
         cmp cl, cantDigitos
         je fin
     jmp pedirNumero   
-fin:     
+fin:
+endp
+ret
+     
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                 Pide Latitud
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+
+   ;pedimos 2 números con la instrucción 0ah. Pide la cantidad de caracteres que entra en el buffer. 
+ proc pedirLatitud  
+    mov ah,09
+    mov dx,offset msjy
+    int 21h 
+    
+    mov bx, offset latitud ;definimos a bx como puntero
+    
+    call pedirDosDigitos
+    
     mov bx, offset latitud
     call deAsciiAEntero
     mov valorLat, ah
@@ -115,18 +127,9 @@ proc pedirLongitud
     int 21h       
     
     mov bx, offset longitud
-    sub cl, cl  ;limpia cl
-    mov ah, 1           
     
-    pedirNumero2:
-        int 21h
-        mov [bx], al
-        inc cl
-        inc bx
-        cmp cl, cantDigitos 
-        je fin2 
-     jmp pedirNumero2
-fin2: 
+    call pedirDosDigitos
+     
     mov bx, offset longitud
     call deAsciiAEntero
 
