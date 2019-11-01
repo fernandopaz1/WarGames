@@ -1,15 +1,20 @@
-org 100h  
+          
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
 
+org 100h
+
+
+ 
 jmp inicio
 
-;Definimos el mapa
-
+;Definimos el mapa                    
 
 rangoDeAleatorio db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
 
 mapaArriba db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13,"$"
 
-mapaAbajo db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"17........................................................................",10,13,"18  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
+mapaAbajo db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
 
 
 msjbaseSecretaUSA  db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
@@ -43,16 +48,21 @@ valorLat db ?
 baseSecretaUSA db ?,?,"$"    ;En el primero esta la longitud y en el segudo la latitud
 baseSecretaURSS db ?,?,"$" 
 
-cantidadDeColumnas db 73
+msjEnter db " ",10,13,"$"
+
+cantidadDeColumnas db 76
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
 
-proc  printMap
+proc  printMap 
     mov ah,09
+    
+    mov dx,offset msjEnter
+    int 21h
+
     mov dx,offset mapaArriba
     int 21h
-    mov ah,09
     mov dx,offset mapaAbajo
     int 21h
     endp
@@ -280,12 +290,40 @@ endp
 ret
     
 proc disparar
-   sub bx,bx
-   mov bl, valorLong
-   mov al, valorLat
-   mul cantidadDeColumnas 
-   add bx,ax
-   mapaArriba[bx]
+    sub valorLong, 1                ;Resta 1 para pararse en la esquina superior izquier del cuadradito
+    sub valorLat,1
+    sub ch,ch                       ;limpia el contador del cicloD2: recorre la latitud
+    cicloD2:
+       sub cl,cl                    ;ponemos el contador del ciclo que recorre la longitud en cero   
+       cicloD:
+            sub bx,bx                ;limpiamos el valor de la longitud
+            mov bl, valorLong
+            ;;;;;;;;;;;;;;;;;;;;;;;;
+            add bl, cl                 ;Sumamos el indice que recorre la longitud  
+            
+            sub ax,ax
+            
+            mov al, valorLat   
+            add al,ch          ;sumamos el indice que recorre a latitud            
+            mul cantidadDeColumnas       ;multiplicamos la cantidand de columnas con la latitud                             
+            
+            add bx,ax          ;sumamos ambos para ver el indice    
+            
+            mov mapaArriba[bx], " "
+            inc cl
+            cmp cl, 3
+         je finCicloD
+         jmp cicloD
+            
+          finCicloD:
+                inc ch
+                cmp ch,3
+                je finCicloD2
+                jmp cicloD2
+                
+  finCicloD2:
+        
+
    
 endp
 ret
@@ -294,10 +332,9 @@ inicio:
     call printMap
     call pedirBasesSecretas
     call aleatorioBinario  
-    call pedirCoordenada    
+    call pedirCoordenada 
+    call disparar  
+    call printMap 
 
 
 ret
-
-
-
