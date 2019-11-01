@@ -10,15 +10,25 @@ rangoDeAleatorio db 2    ;Con esto fijamos entre que valores obtenemos el result
 mapaArriba db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13,"$"
 
 mapaAbajo db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"17........................................................................",10,13,"18  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
-        
-juegaUSA  db "Juega UNITED STATES: ",10,13,"$"
-juegaURSS db "Juega SOVIET UNION: ",10,13,"$" 
 
-msjx db "Ingrese coordenada x:  ","$"
+
+msjbaseSecretaUSA  db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
+msjbaseSecretaURSS  db 10,13,"Ingrese base secreta de URSS: ",10,13,"$"
+        
+
+juegaUSA  db 10,13,"Juega UNITED STATES: ",10,13,"$"
+juegaURSS db 10,13,"Juega SOVIET UNION: ",10,13,"$" 
+
+
+msjx db 10,13,"Ingrese coordenada x:  ","$"
 msjy db 10,13,"Ingrese coordenada y:  ","$"
          
 latitud db ?,?,"$"
 longitud db ?,?,"$"
+
+latitudSecreta db ?,?,"$"
+longitudSecreta db ?,?,"$"
+
 
 buffer db 3 dup(?)
 cantDigitos db 2           
@@ -29,6 +39,11 @@ diez db 10
 valor db ?   
 valorLong db  ?
 valorLat db ?
+
+baseSecretaUSA db ?,?,"$"    ;En el primero esta la longitud y en el segudo la latitud
+baseSecretaURSS db ?,?,"$" 
+
+cantidadDeColumnas db 73
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -92,7 +107,58 @@ proc pedirDosDigitos
 fin:
 endp
 ret
+
+
+;este proc lo usamos cuando el jugador ingresa la base secreta usamos la instruccion 07h.     
+proc pedirDosDigitosSecreto     
+    sub cl,cl                                                     
+    mov ah, 07h  ;No imprime la entrada en pantalla   
+    
      
+    pedirNumeroSecreto:
+        int 21h 
+        mov [bx], al     
+        inc cl ; es un contador
+        inc bx
+        cmp cl, cantDigitos
+        je finSecreto
+    jmp pedirNumeroSecreto   
+finSecreto:
+endp
+ret
+
+
+ proc pedirLatitudSecreta  
+    mov ah,09
+    mov dx,offset msjy
+    int 21h 
+    
+    mov bx, offset latitud ;definimos a bx como puntero
+    
+    call pedirDosDigitosSecreto
+    
+    mov bx, offset latitud
+    call deAsciiAEntero
+    mov valorLat, ah
+endp
+ret
+
+proc pedirLongitudSecreta  
+    mov ah,09
+    mov dx,offset msjx
+    int 21h       
+    
+    mov bx, offset longitud
+    
+    call pedirDosDigitosSecreto
+     
+    mov bx, offset longitud
+    call deAsciiAEntero
+
+    mov valorLong, ah
+endp
+ret
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                 Pide Latitud
@@ -136,6 +202,48 @@ proc pedirLongitud
     mov valorLong, ah
 endp
 ret
+
+proc pedirBasesSecretas
+  mov ah,09 
+  mov dx,offset msjbaseSecretaUSA 
+  int 21h
+                                          
+    
+  pedirLongOtraVezUSA:
+  call pedirLongitudSecreta 
+  mov ah, valorLong
+  mov al, valorLat
+  
+  cmp valorLong, 33  ;Se fija si ingreso un numero entre 0 y 33
+  jae pedirLongOtraVezUSA 
+  
+  call pedirLatitudSecreta
+  
+  mov baseSecretaUSA[0], ah
+  mov baseSecretaUSA[1], al  
+  
+  
+  mov ah,09 
+  mov dx,offset msjbaseSecretaURSS 
+  int 21h
+  
+    
+pedirLongOtraURSS:  
+  call pedirLongitudSecreta
+  cmp valorLong,33
+  jbe pedirLongOtraURSS
+
+  call pedirLatitudSecreta
+  mov al, valorLat
+  mov ah, valorLong 
+  mov baseSecretaURSS[0], ah
+  mov baseSecretaURSS[1], al  
+
+    endp
+ret 
+
+         
+
                            
 proc pedirCoordenada
   call pedirLongitud
@@ -171,10 +279,21 @@ fin3:
 endp 
 ret
     
-
+proc disparar
+   sub bx,bx
+   mov bl, valorLong
+   mov al, valorLat
+   mul cantidadDeColumnas 
+   add bx,ax
+   mapaArriba[bx]
+   
+endp
+ret
+ 
 inicio:
     call printMap
-    call aleatorioBinario 
+    call pedirBasesSecretas
+    call aleatorioBinario  
     call pedirCoordenada    
 
 
