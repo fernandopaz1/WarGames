@@ -12,7 +12,7 @@ jmp inicio
 
 rangoDeAleatorio db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
 
-mapaArriba db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13,"$"
+mapaArriba db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13
 
 mapaAbajo db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
 
@@ -51,6 +51,7 @@ baseSecretaURSS db ?,?,"$"
 msjEnter db " ",10,13,"$"
 
 cantidadDeColumnas db 76
+cantidadDeFilas db 19
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -61,10 +62,9 @@ proc  printMap
     mov dx,offset msjEnter
     int 21h
 
-    mov dx,offset mapaArriba
-    int 21h
-    mov dx,offset mapaAbajo
-    int 21h
+    mov dx,offset mapaArriba  ;Ahora mapaArriba no termina con "$" por lo que termina de imprimir cuando encuentra
+    int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instrucción
+   
     endp
 ret 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -291,50 +291,66 @@ ret
     
 proc disparar
     sub valorLong, 1                ;Resta 1 para pararse en la esquina superior izquier del cuadradito
-    sub valorLat,1
+    sub valorLat,1  
+    
     sub ch,ch                       ;limpia el contador del cicloD2: recorre la latitud
-    cicloD2:
+    iteramosLatitud:
        sub cl,cl                    ;ponemos el contador del ciclo que recorre la longitud en cero   
-       cicloD:
+       iteramosLongitud:
             sub bx,bx                ;limpiamos el valor de la longitud
-            mov bl, valorLong
-            ;;;;;;;;;;;;;;;;;;;;;;;;
+            mov bl, valorLong            
             add bl, cl                 ;Sumamos el indice que recorre la longitud  
             
-            sub ax,ax
-            
+            sub ax,ax            
             mov al, valorLat   
             add al,ch          ;sumamos el indice que recorre a latitud            
-            mul cantidadDeColumnas       ;multiplicamos la cantidand de columnas con la latitud                             
             
-            add bx,ax          ;sumamos ambos para ver el indice    
-            
-            mov mapaArriba[bx], " "
+            cmp al,0
+            jae LatMayorA0  ;salta solo si la latitud es mayor a cero
+        siguientePosicion:
             inc cl
-            cmp cl, 3
-         je finCicloD
-         jmp cicloD
+            cmp cl, 3 
+         je nuevaLatitud
+         jmp iteramosLongitud
             
-          finCicloD:
+          nuevaLatitud:
                 inc ch
                 cmp ch,3
-                je finCicloD2
-                jmp cicloD2
-                
-  finCicloD2:
-        
+                je finIteracion
+                jmp iteramosLatitud
 
-   
+LatMayorA0:
+    cmp al,19
+    jbe LatMenorA19            ;salta solo si la latitud es menor a 19
+    jmp siguientePosicion
+    
+LatMenorA19:
+    cmp bl,0
+    jae LongMayorA0            ;salta solo si la longitud es mayor a 0
+    jmp siguientePosicion
+
+LongMayorA0:
+    cmp bl,73          ;comparamos con 73 porque en cada fila hay 74 caracteres pero empezamos a contar desde el cero
+    jbe estaEnElMapa           ;sata solo si la longitud es menor a 74
+    jmp siguientePosicion
+
+estaEnElMapa: 
+    mul cantidadDeColumnas       ;multiplicamos la cantidand de columnas con la latitud                             
+    add bx,ax          ;sumamos ambos para ver el indice        
+    mov mapaArriba[bx], " "  
+    jmp siguientePosicion    
+
+                
+finIteracion:
 endp
 ret
  
 inicio:
-    call printMap
-    call pedirBasesSecretas
-    call aleatorioBinario  
+   ; call printMap
+   ; call pedirBasesSecretas
+   ; call aleatorioBinario  
     call pedirCoordenada 
     call disparar  
     call printMap 
-
 
 ret
