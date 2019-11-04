@@ -51,7 +51,9 @@ baseSecretaURSS db ?,?,"$"
 msjEnter db " ",10,13,"$"
 
 cantidadDeColumnas db 76
-cantidadDeFilas db 19
+cantidadDeFilas db 19  
+
+dentroDelMapa db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -288,6 +290,34 @@ fin3:
     mov ah, valor 
 endp 
 ret
+
+proc estaEnElMapa
+    mov dentroDelMapa, 0
+      
+    cmp al,0
+    jae LatMayorA0  ;salta solo si la latitud es mayor a cero
+    jmp NoEstaEnElMapa  
+    
+LatMayorA0:
+    cmp al,19
+    jbe LatMenorA19            ;salta solo si la latitud es menor a 19
+    jmp NoEstaEnElMapa
+
+LatMenorA19:
+    cmp bl,0
+    jae LongMayorA0            ;salta solo si la longitud es mayor a 0
+    jmp NoEstaEnElMapa
+    
+LongMayorA0:
+    cmp bl,73          ;comparamos con 73 porque en cada fila hay 74 caracteres pero empezamos a contar desde el cero
+    jbe siEstaEnElMapa           ;sata solo si la longitud es menor a 74
+    jmp NoEstaEnElMapa
+    
+siEstaEnElMapa:
+    mov dentroDelMapa,1
+NoEstaEnElMapa:
+endp
+ret
     
 proc disparar
     sub valorLong, 1                ;Resta 1 para pararse en la esquina superior izquier del cuadradito
@@ -305,9 +335,12 @@ proc disparar
             mov al, valorLat   
             add al,ch          ;sumamos el indice que recorre a latitud            
             
-            cmp al,0
-            jae LatMayorA0  ;salta solo si la latitud es mayor a cero
-        siguientePosicion:
+            call estaEnElMapa
+            cmp dentroDelMapa,1
+            je puedoDisparar 
+            
+siguientePosicion:
+            
             inc cl
             cmp cl, 3 
          je nuevaLatitud
@@ -316,32 +349,18 @@ proc disparar
           nuevaLatitud:
                 inc ch
                 cmp ch,3
-                je finIteracion
+                je finDisparo
                 jmp iteramosLatitud
 
-LatMayorA0:
-    cmp al,19
-    jbe LatMenorA19            ;salta solo si la latitud es menor a 19
-    jmp siguientePosicion
-    
-LatMenorA19:
-    cmp bl,0
-    jae LongMayorA0            ;salta solo si la longitud es mayor a 0
-    jmp siguientePosicion
 
-LongMayorA0:
-    cmp bl,73          ;comparamos con 73 porque en cada fila hay 74 caracteres pero empezamos a contar desde el cero
-    jbe estaEnElMapa           ;sata solo si la longitud es menor a 74
-    jmp siguientePosicion
-
-estaEnElMapa: 
+puedoDisparar: 
     mul cantidadDeColumnas       ;multiplicamos la cantidand de columnas con la latitud                             
     add bx,ax          ;sumamos ambos para ver el indice        
     mov mapaArriba[bx], " "  
     jmp siguientePosicion    
 
                 
-finIteracion:
+finDisparo:
 endp
 ret
  
