@@ -10,50 +10,32 @@ jmp inicio
 
 ;Definimos el mapa                    
 
-rangoDeAleatorio db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
-
-mapaArriba db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13
-
-mapaAbajo db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
-
-
-msjbaseSecretaUSA  db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
+rangoDeAleatorio    db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
+mapaArriba          db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13
+mapaAbajo           db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
+msjbaseSecretaUSA   db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
 msjbaseSecretaURSS  db 10,13,"Ingrese base secreta de URSS: ",10,13,"$"
-        
-
-juegaUSA  db 10,13,"Juega UNITED STATES: ",10,13,"$"
-juegaURSS db 10,13,"Juega SOVIET UNION: ",10,13,"$" 
-
-
-msjx db 10,13,"Ingrese coordenada x:  ","$"
-msjy db 10,13,"Ingrese coordenada y:  ","$"
-         
-latitud db ?,?,"$"
-longitud db ?,?,"$"
-
-latitudSecreta db ?,?,"$"
-longitudSecreta db ?,?,"$"
-
-
-buffer db 3 dup(?)
-cantDigitos db 2           
-
-base db 1 
-
-diez db 10   
-valor db ?   
-valorLong db  ?
-valorLat db ?
-
-baseSecretaUSA db ?,?,"$"    ;En el primero esta la longitud y en el segudo la latitud
-baseSecretaURSS db ?,?,"$" 
-
-msjEnter db " ",10,13,"$"
-
-cantidadDeColumnas db 76
-cantidadDeFilas db 19  
-
-dentroDelMapa db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
+juegaUSA            db 10,13,"Juega UNITED STATES: ",10,13,"$"
+juegaURSS           db 10,13,"Juega SOVIET UNION: ",10,13,"$" 
+msjx                db 10,13,"Ingrese coordenada x:  ","$"
+msjy                db 10,13,"Ingrese coordenada y:  ","$"
+latitud             db ?,?,"$"
+longitud            db ?,?,"$"
+latitudSecreta      db ?,?,"$"
+longitudSecreta     db ?,?,"$"
+buffer              db 3 dup(?)
+cantDigitos         db 2          
+base                db 1 
+diez                db 10   
+valor               db ?   
+valorLong           db ?
+valorLat            db ?
+baseSecretaUSA      db ?,?,"$"  ;En el primero esta la longitud y en el segudo la latitud
+baseSecretaURSS     db ?,?,"$"
+msjEnter            db " ",10,13,"$"
+cantidadDeColumnas  db 76
+cantidadDeFilas     db 19  
+dentroDelMapa       db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -65,7 +47,7 @@ proc  printMap
     int 21h
 
     mov dx,offset mapaArriba  ;Ahora mapaArriba no termina con "$" por lo que termina de imprimir cuando encuentra
-    int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instrucción
+    int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instrucciï¿½n
    
     endp
 ret 
@@ -84,13 +66,13 @@ proc aleatorioBinario
     cmp ah,1
     je imprimirJuegaUSA 
     jne imprimirJuegaURSS
- imprimirJuegaUSA:
+imprimirJuegaUSA:
     mov ah,09h
     mov dx, offset juegaUSA
     int 21h
 endp
 ret 
- imprimirJuegaURSS:
+imprimirJuegaURSS:
     mov ah,09h
     mov dx, offset juegaURSS
     int 21h
@@ -140,7 +122,7 @@ endp
 ret
 
 
- proc pedirLatitudSecreta  
+proc pedirLatitudSecreta  
     mov ah,09
     mov dx,offset msjy
     int 21h 
@@ -168,7 +150,7 @@ proc pedirLongitudSecreta
     call deAsciiAEntero
 
     mov valorLong, ah
-endp
+    endp
 ret
 
 
@@ -176,8 +158,8 @@ ret
 ;                 Pide Latitud
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
 
-   ;pedimos 2 números con la instrucción 0ah. Pide la cantidad de caracteres que entra en el buffer. 
- proc pedirLatitud  
+   ;pedimos 2 nï¿½meros con la instrucciï¿½n 0ah. Pide la cantidad de caracteres que entra en el buffer. 
+proc pedirLatitud  
     mov ah,09
     mov dx,offset msjy
     int 21h 
@@ -189,7 +171,7 @@ ret
     mov bx, offset latitud
     call deAsciiAEntero
     mov valorLat, ah
-endp
+    endp
 ret
 
          
@@ -212,7 +194,7 @@ proc pedirLongitud
     call deAsciiAEntero
 
     mov valorLong, ah
-endp
+    endp
 ret
 
 proc pedirBasesSecretas
@@ -239,11 +221,11 @@ proc pedirBasesSecretas
   mov dx,offset msjbaseSecretaURSS 
   int 21h
   
-    
+
 pedirLongOtraURSS:  
-  call pedirLongitudSecreta
-  cmp valorLong,33
-  jbe pedirLongOtraURSS
+    call pedirLongitudSecreta
+    cmp valorLong,33
+jbe pedirLongOtraURSS
 
   call pedirLatitudSecreta
   mov al, valorLat
@@ -258,8 +240,8 @@ ret
 
                            
 proc pedirCoordenada
-  call pedirLongitud
-  call pedirLatitud
+    call pedirLongitud
+    call pedirLatitud
     endp
 ret          
                    
@@ -284,11 +266,11 @@ proc deAsciiAEntero
         inc cl
         cmp cl, cantDigitos
         je fin3
-     jmp ciclo
+    jmp ciclo
 fin3:
     mov base,1
     mov ah, valor 
-endp 
+    endp 
 ret
 
 proc estaEnElMapa
@@ -301,22 +283,22 @@ proc estaEnElMapa
 LatMayorA0:
     cmp al,19
     jbe LatMenorA19            ;salta solo si la latitud es menor a 19
-    jmp NoEstaEnElMapa
+jmp NoEstaEnElMapa
 
 LatMenorA19:
     cmp bl,0
     jae LongMayorA0            ;salta solo si la longitud es mayor a 0
-    jmp NoEstaEnElMapa
+jmp NoEstaEnElMapa
     
 LongMayorA0:
     cmp bl,73          ;comparamos con 73 porque en cada fila hay 74 caracteres pero empezamos a contar desde el cero
     jbe siEstaEnElMapa           ;sata solo si la longitud es menor a 74
-    jmp NoEstaEnElMapa
+jmp NoEstaEnElMapa
     
 siEstaEnElMapa:
     mov dentroDelMapa,1
 NoEstaEnElMapa:
-endp
+    endp
 ret
     
 proc disparar
