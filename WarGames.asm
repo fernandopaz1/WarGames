@@ -36,6 +36,11 @@ msjEnter            db " ",10,13,"$"
 cantidadDeColumnas  db 76
 cantidadDeFilas     db 19  
 dentroDelMapa       db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
+msjFueraDelMapa     db 10,13,10,13,"Coordenada fuera del mapa",10,13,"$"
+turno               db ?
+usaTieneW           db ?
+urssTieneW          db ?
+msjUSAPierde     db 10,13,10,13,"Aguante la URSS Viejaaaa",10,13,"$"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -63,7 +68,9 @@ proc aleatorioBinario
     mov al,dl    ;muevo los milisegundos a al
     div rangoDeAleatorio      ;tenemos 0 o 1 aleatorio en ah
     
-    cmp ah,1
+    mov turno, ah
+
+    cmp turno,1
     je imprimirJuegaUSA 
     jne imprimirJuegaURSS
 imprimirJuegaUSA:
@@ -302,6 +309,12 @@ NoEstaEnElMapa:
 ret
     
 proc disparar
+    mov al, valorLat
+    mov bl, valorLong
+    call estaEnElMapa
+    cmp dentroDelMapa, 0
+    je mensajeFueraDelMapa
+
     sub valorLong, 1                ;Resta 1 para pararse en la esquina superior izquier del cuadradito
     sub valorLat,1  
     
@@ -323,16 +336,16 @@ proc disparar
             
 siguientePosicion:
             
-            inc cl
-            cmp cl, 3 
-         je nuevaLatitud
-         jmp iteramosLongitud
+        inc cl
+        cmp cl, 3 
+        je nuevaLatitud
+        jmp iteramosLongitud
             
-          nuevaLatitud:
-                inc ch
-                cmp ch,3
-                je finDisparo
-                jmp iteramosLatitud
+        nuevaLatitud:
+            inc ch
+            cmp ch,3
+            je finDisparo
+        jmp iteramosLatitud
 
 
 puedoDisparar: 
@@ -341,17 +354,89 @@ puedoDisparar:
     mov mapaArriba[bx], " "  
     jmp siguientePosicion    
 
+mensajeFueraDelMapa:
+    mov ah,09 
+    mov dx,offset msjFueraDelMapa 
+    int 21h
                 
 finDisparo:
 endp
 ret
  
-inicio:
-   ; call printMap
-   ; call pedirBasesSecretas
-   ; call aleatorioBinario  
-    call pedirCoordenada 
-    call disparar  
-    call printMap 
+hayWDeUSA proc
 
+    mov usaTieneW, 0    
+    mov bx, offset mapaArriba;
+   
+    sub cx,cx
+    recorreLatitudes:
+        sub dx,dx   ;Recorre longitudes
+        recorreLongitudes:
+
+            mov al, cl
+            mul cantidadDeColumnas
+
+            add ax, dx
+
+            push bx
+            push cx
+            add bx, ax
+
+            mov cl, [bx]
+            cmp cl, "W"
+            je encontramosW
+    volver:
+            pop cx
+            pop bx
+
+            inc dx
+            cmp dl, cantidadDeColumnas
+            je noRecorreLongitudes
+            jmp recorreLongitudes
+    noRecorreLongitudes:
+    inc cx
+    cmp cl,cantidadDeFilas
+    je noHayWDeUsa
+    jmp recorreLatitudes
+
+encontramosW:
+    cmp dl,30
+    jbe estaEnUsa
+    jmp volver
+
+estaEnUsa:
+    mov usaTieneW,1
+    jmp noHayWDeUsa
+
+noHayWDeUsa:
+hayWDeUSA endp
+ret
+
+
+
+proc hayW
+    call hayWDeUSA
+    cmp usaTieneW,0
+    je usaPierde
+
+usaPierde:
+    mov ah,09h
+    mov dx, offset usaPierde
+    int 21h
+endp
+ret
+
+inicio:
+    ;call printMap
+    ;call pedirBasesSecretas
+    ;call aleatorioBinario
+    seguirJugando:  
+        call pedirCoordenada 
+        call disparar  
+        call printMap 
+        call hayW
+        cmp usaTieneW,0
+        je finalDelJuego
+    jmp seguirJugando
+finalDelJuego:
 ret
