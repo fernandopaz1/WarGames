@@ -38,14 +38,14 @@ cantidadDeFilas     db 19
 dentroDelMapa       db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
 msjFueraDelMapa     db 10,13,10,13,"Coordenada fuera del mapa",10,13,"$"
 turno               db ?
-usaTieneW           db ?
-urssTieneW          db ?
+usaTieneW           db 1
+urssTieneW          db 1
 msjUSAPierde     db 10,13,10,13,"Aguante la URSS Viejaaaa",10,13,"$"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
 
-proc  printMap 
+printMap proc 
     mov ah,09
     
     mov dx,offset msjEnter
@@ -53,14 +53,15 @@ proc  printMap
 
     mov dx,offset mapaArriba  ;Ahora mapaArriba no termina con "$" por lo que termina de imprimir cuando encuentra
     int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instrucci�n
-   
-    endp
-ret 
+     
+    ret
+printMap endp
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Decide quien juega
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
 
-proc aleatorioBinario       
+proc aleatorioBinario        
     mov ah,2ch   ;toma la hora del sistema y guarda en ch:hora, cl:min, dh:seg y dl:miliseg
     int 21h
     
@@ -84,15 +85,15 @@ imprimirJuegaURSS:
     mov dx, offset juegaURSS
     int 21h
     
-endp
-ret                            
+    ret
+endp aleatorioBinario                        
      
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Pide dos digitos
 ;
 ; bx: offset de la etiqueda donde se guardan los digitos
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
-proc pedirDosDigitos    
+pedirDosDigitos proc    
     sub cl,cl
     mov ah, 01h   
     
@@ -105,13 +106,13 @@ proc pedirDosDigitos
         cmp cl, cantDigitos
         je fin
     jmp pedirNumero   
-fin:
-endp
-ret
+fin:            
+    ret
+pedirDosDigitos endp
 
 
 ;este proc lo usamos cuando el jugador ingresa la base secreta usamos la instruccion 07h.     
-proc pedirDosDigitosSecreto     
+pedirDosDigitosSecreto proc     
     sub cl,cl                                                     
     mov ah, 07h  ;No imprime la entrada en pantalla   
     
@@ -125,11 +126,11 @@ proc pedirDosDigitosSecreto
         je finSecreto
     jmp pedirNumeroSecreto   
 finSecreto:
-endp
-ret
+    ret
+pedirDosDigitosSecreto endp
 
 
-proc pedirLatitudSecreta  
+pedirLatitudSecreta proc  
     mov ah,09
     mov dx,offset msjy
     int 21h 
@@ -141,10 +142,11 @@ proc pedirLatitudSecreta
     mov bx, offset latitud
     call deAsciiAEntero
     mov valorLat, ah
-endp
-ret
+    ret
+pedirLatitudSecreta endp
 
-proc pedirLongitudSecreta  
+
+pedirLongitudSecreta proc  
     mov ah,09
     mov dx,offset msjx
     int 21h       
@@ -157,8 +159,8 @@ proc pedirLongitudSecreta
     call deAsciiAEntero
 
     mov valorLong, ah
-    endp
-ret
+    ret
+pedirLongitudSecreta endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -363,7 +365,7 @@ finDisparo:
 endp
 ret
  
-hayWDeUSA proc
+proc hayWDeUSA
 
     mov usaTieneW, 0    
     mov bx, offset mapaArriba;
@@ -406,11 +408,12 @@ encontramosW:
 
 estaEnUsa:
     mov usaTieneW,1
-    jmp noHayWDeUsa
+    pop cx
+    pop bx
 
-noHayWDeUsa:
-hayWDeUSA endp
-ret
+noHayWDeUsa:  
+    ret
+endp hayWDeUSA
 
 
 
@@ -418,11 +421,13 @@ proc hayW
     call hayWDeUSA
     cmp usaTieneW,0
     je usaPierde
+    jmp siHayW
 
 usaPierde:
     mov ah,09h
     mov dx, offset usaPierde
-    int 21h
+    int 21h      
+siHayW:
 endp
 ret
 
