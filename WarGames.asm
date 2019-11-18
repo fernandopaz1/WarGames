@@ -15,8 +15,8 @@ mapaArriba          db "00..........................WAR GAMES - 1983............
 mapaAbajo           db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
 msjbaseSecretaUSA   db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
 msjbaseSecretaURSS  db 10,13,"Ingrese base secreta de URSS: ",10,13,"$"
-juegaUSA            db 10,13,"Juega UNITED STATES: ",10,13,"$"
-juegaURSS           db 10,13,"Juega SOVIET UNION: ",10,13,"$" 
+juegaUSA            db 10,13,10,13,"Juega UNITED STATES: ",10,13,"$"
+juegaURSS           db 10,13,10,13,"Juega SOVIET UNION: ",10,13,"$" 
 msjx                db 10,13,"Ingrese coordenada x:  ","$"
 msjy                db 10,13,"Ingrese coordenada y:  ","$"
 latitud             db ?,?,"$"
@@ -37,23 +37,28 @@ cantidadDeColumnas  db 76
 cantidadDeFilas     db 19  
 dentroDelMapa       db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
 msjFueraDelMapa     db 10,13,10,13,"Coordenada fuera del mapa",10,13,"$"
-turno               db ?
+turno               db ?   ;1: usa     0:urss 
 usaTieneW           db 1
 urssTieneW          db 1
-msjUSAPierde     db 10,13,10,13,"Aguante la URSS Viejaaaa",10,13,"$"
+msjUSAPierde        db 10,13,10,13,"Ha ganado la Union Sovietica",10,13,"$"
+msjURSSPierde       db 10,13,10,13,"Ha ganado la Estados Unidos",10,13,"$"   
+cantWDeUSA          db 40
+cantWDeURSS         db 54
+numeroEnAscii       db ?, ?, "$"  
+msjCantWUSA         db 10,13,"Regiones restantes de USA:   ","$"
+msjCantWURSS        db 10,13,"Regiones restantes de URSS:  ","$"  
+errorNAN            db 0
+msjErrorNAN         db 10,13,"Error: El valor ingresado no es un n",00A3h,"mero","$"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
 
 printMap proc 
     mov ah,09
-    
     mov dx,offset msjEnter
     int 21h
-
     mov dx,offset mapaArriba  ;Ahora mapaArriba no termina con "$" por lo que termina de imprimir cuando encuentra
-    int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instrucci�n
-     
+    int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instruccion
     ret
 printMap endp
  
@@ -64,27 +69,12 @@ printMap endp
 proc aleatorioBinario        
     mov ah,2ch   ;toma la hora del sistema y guarda en ch:hora, cl:min, dh:seg y dl:miliseg
     int 21h
-    
     xor ah,ah    ;pongo ah en cero
     mov al,dl    ;muevo los milisegundos a al
     div rangoDeAleatorio      ;tenemos 0 o 1 aleatorio en ah
-    
     mov turno, ah
-
-    cmp turno,1
-    je imprimirJuegaUSA 
-    jne imprimirJuegaURSS
-imprimirJuegaUSA:
-    mov ah,09h
-    mov dx, offset juegaUSA
-    int 21h
-endp
-ret 
-imprimirJuegaURSS:
-    mov ah,09h
-    mov dx, offset juegaURSS
-    int 21h
-    
+    call informarPaisTurno
+finAleatorio:    
     ret
 endp aleatorioBinario                        
      
@@ -95,29 +85,41 @@ endp aleatorioBinario
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
 pedirDosDigitos proc    
     sub cl,cl
-    mov ah, 01h   
-    
+    mov ah, 01h
+    mov errorNAN, 0    
      
     pedirNumero:
-        int 21h 
+        int 21h
+        cmp al, "9"
+        ja  noEsNumero
+        cmp al, "0"
+        jb  noEsNumero
         mov [bx], al     
         inc cl ; es un contador
         inc bx
         cmp cl, cantDigitos
         je fin
-    jmp pedirNumero   
+    jmp pedirNumero
+noEsNumero:
+     mov ah, 09h
+     mov dx, offset msjErrorNAN
+     int 21h
+     mov errorNAN, 1
+     
 fin:            
     ret
 pedirDosDigitos endp
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;           Pide dos digitos y no los muestra en pantalla
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;este proc lo usamos cuando el jugador ingresa la base secreta usamos la instruccion 07h.     
+
 pedirDosDigitosSecreto proc     
     sub cl,cl                                                     
-    mov ah, 07h  ;No imprime la entrada en pantalla   
-    
-     
-    pedirNumeroSecreto:
+    mov ah, 07h  ;No imprime la entrada en pantalla      
+pedirNumeroSecreto:
         int 21h 
         mov [bx], al     
         inc cl ; es un contador
@@ -282,6 +284,25 @@ fin3:
     endp 
 ret
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;    deEnteroAAscii
+;
+;guardamos en AX el entero a transformmar
+;El resultado se guarda en la etiqueta numeroEnAscii
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+proc deEnteroAAscii
+    div diez
+    add ah, 30h
+    add al, 30h
+    
+    mov numeroEnAscii[0], al
+    mov numeroEnAscii[1], ah
+ 
+    endp deEnteroAAscii
+ret
+    
 proc estaEnElMapa
     mov dentroDelMapa, 0
       
@@ -336,8 +357,7 @@ proc disparar
             cmp dentroDelMapa,1
             je puedoDisparar 
             
-siguientePosicion:
-            
+siguientePosicion:   
         inc cl
         cmp cl, 3 
         je nuevaLatitud
@@ -352,9 +372,17 @@ siguientePosicion:
 
 puedoDisparar: 
     mul cantidadDeColumnas       ;multiplicamos la cantidand de columnas con la latitud                             
-    add bx,ax          ;sumamos ambos para ver el indice        
+    add bx,ax          ;sumamos ambos para ver el indice  
+    cmp mapaArriba[bx], "W"
+    je encontramosW
+seguimosDisparando:      
     mov mapaArriba[bx], " "  
     jmp siguientePosicion    
+
+encontramosW:
+    call contamosW
+    jmp seguimosDisparando
+
 
 mensajeFueraDelMapa:
     mov ah,09 
@@ -365,81 +393,108 @@ finDisparo:
 endp
 ret
  
-proc hayWDeUSA
 
-    mov usaTieneW, 0    
-    mov bx, offset mapaArriba;
-   
-    sub cx,cx
-    recorreLatitudes:
-        sub dx,dx   ;Recorre longitudes
-        recorreLongitudes:
+proc contamosW 
+    cmp valorLong, 25
+    jbe estaEnUSA
+    cmp valorLong, 35
+    jae estaEnURSS 
+estaEnUSA:
+    dec cantWDeUSA
+    jmp terminamosConteo    
 
-            mov al, cl
-            mul cantidadDeColumnas
+estaEnURSS:
+    dec cantWDeURSS
 
-            add ax, dx
+terminamosConteo:  
+    ret 
+contamosW endp   
 
-            push bx
-            push cx
-            add bx, ax
-
-            mov cl, [bx]
-            cmp cl, "W"
-            je encontramosW
-    volver:
-            pop cx
-            pop bx
-
-            inc dx
-            cmp dl, cantidadDeColumnas
-            je noRecorreLongitudes
-            jmp recorreLongitudes
-    noRecorreLongitudes:
-    inc cx
-    cmp cl,cantidadDeFilas
-    je noHayWDeUsa
-    jmp recorreLatitudes
-
-encontramosW:
-    cmp dl,30
-    jbe estaEnUsa
-    jmp volver
-
-estaEnUsa:
-    mov usaTieneW,1
-    pop cx
-    pop bx
-
-noHayWDeUsa:  
-    ret
-endp hayWDeUSA
-
-
+          
 
 proc hayW
-    call hayWDeUSA
-    cmp usaTieneW,0
+    cmp cantWDeUSA,0
     je usaPierde
-    jmp siHayW
+    
+    cmp cantWDeURSS,0
+    je urssPierde
+    
+    jmp siHayW 
 
 usaPierde:
     mov ah,09h
     mov dx, offset usaPierde
     int 21h      
+urssPierde:
+    mov ah,09h
+    mov dx, offset urssPierde
+    int 21h      
+
 siHayW:
 endp
+ret  
+
+proc actualizarSiguienteTurno
+    xor turno, 1
+ret 
+actualizarSiguienteTurno endp
+         
+         
+proc imprimirW 
+    sub ax, ax
+    mov al, cantWDeUSA
+    call deEnteroAAscii
+    
+    mov ah,09h
+    mov dx, offset msjCantWUSA
+    int 21h
+    mov dx, offset numeroEnAscii
+    int 21h
+     
+    sub ax, ax 
+    mov al, cantWDeURSS
+    call deEnteroAAscii
+    
+    mov ah,09h
+    mov dx, offset msjCantWURSS
+    int 21h
+    mov dx, offset numeroEnAscii
+    int 21h
+    
+endp imprimirW
 ret
+    
+ 
+        
+                             
+proc informarPaisTurno
+    cmp turno,1
+    je imprimirJuegaUSA 
+    jmp imprimirJuegaURSS
+imprimirJuegaUSA:
+    mov ah,09h
+    mov dx, offset juegaUSA
+    int 21h   
+    jmp finAleatorio 
+imprimirJuegaURSS:
+    mov ah,09h
+    mov dx, offset juegaURSS
+    int 21h
+ret 
+informarPaisTurno endp                            
 
 inicio:
-    ;call printMap
-    ;call pedirBasesSecretas
-    ;call aleatorioBinario
+    call printMap
+    call pedirBasesSecretas
+    call aleatorioBinario
     seguirJugando:  
         call pedirCoordenada 
         call disparar  
         call printMap 
-        call hayW
+        call hayW  
+         call imprimirW
+        call actualizarSiguienteTurno
+        call informarPaisTurno
         cmp usaTieneW,0
         je finalDelJuego
     jmp seguirJugando
