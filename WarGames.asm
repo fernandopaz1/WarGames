@@ -47,8 +47,10 @@ cantWDeURSS         db 54
 numeroEnAscii       db ?, ?, "$"  
 msjCantWUSA         db 10,13,"Regiones restantes de USA:   ","$"
 msjCantWURSS        db 10,13,"Regiones restantes de URSS:  ","$"  
-errorNAN            db 0
+errorNAN            db 0                                                             
 msjErrorNAN         db 10,13,"Error: El valor ingresado no es un n",00A3h,"mero","$"
+hayGanador          db 0
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
@@ -61,6 +63,8 @@ printMap proc
     int 21h                   ;el "$" en mapa abajo. Por eso solo usamos una instruccion
     ret
 printMap endp
+
+
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Decide quien juega
@@ -73,11 +77,127 @@ proc aleatorioBinario
     mov al,dl    ;muevo los milisegundos a al
     div rangoDeAleatorio      ;tenemos 0 o 1 aleatorio en ah
     mov turno, ah
-    call informarPaisTurno
 finAleatorio:    
     ret
 endp aleatorioBinario                        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;           Pide dos digitos y no los muestra en pantalla
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;este proc lo usamos cuando el jugador ingresa la base secreta usamos la instruccion 07h.     
+
+pedirDosDigitosSecreto proc     
+    sub cl,cl                                                     
+    mov ah, 07h  ;No imprime la entrada en pantalla      
+pedirNumeroSecreto:
+        int 21h 
+        mov [bx], al     
+        inc cl ; es un contador
+        inc bx
+        cmp cl, cantDigitos
+        je finSecreto
+    jmp pedirNumeroSecreto   
+finSecreto:
+    ret
+pedirDosDigitosSecreto endp
+              
+              
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;           Pide latitud llamando a pedirDosDigitosSecreto
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+pedirLatitudSecreta proc  
+    mov ah,09
+    mov dx,offset msjy
+    int 21h 
+    
+    mov bx, offset latitud ;definimos a bx como puntero
+    
+    call pedirDosDigitosSecreto
+    
+    mov bx, offset latitud
+    call deAsciiAEntero
+    mov valorLat, ah
+    ret
+pedirLatitudSecreta endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;           Pide longitud llamando a pedirDosDigitosSecreto
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+pedirLongitudSecreta proc  
+    mov ah,09
+    mov dx,offset msjx
+    int 21h       
+    
+    mov bx, offset longitud
+    
+    call pedirDosDigitosSecreto
      
+    mov bx, offset longitud
+    call deAsciiAEntero
+
+    mov valorLong, ah
+    ret
+pedirLongitudSecreta endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;      Pide coordenadas de bases secretas
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+proc pedirBasesSecretas
+  mov ah,09 
+  mov dx,offset msjbaseSecretaUSA 
+  int 21h
+                                          
+    
+pedirLongOtraVezUSA:
+  call pedirLongitudSecreta 
+  cmp valorLong, 33  ;Se fija si ingreso un numero entre 0 y 33
+  jae pedirLongOtraVezUSA 
+  mov ah, valorLong
+
+pedirLatOtraVezUSA:
+    call pedirLatitudSecreta
+    cmp valorLat, 19
+    ja pedirLatOtraVezUSA
+    mov al, valorLat
+    
+    mov baseSecretaUSA[0], ah
+    mov baseSecretaUSA[1], al  
+    
+    
+    mov ah,09 
+    mov dx,offset msjbaseSecretaURSS 
+    int 21h
+  
+
+pedirLongOtraVezURSS:  
+    call pedirLongitudSecreta
+    cmp valorLong,33
+    jbe pedirLongOtraVezURSS
+    cmp valorLong, 75
+    jae pedirLongOtraVezURSS
+    
+    mov ah, valorLong
+
+pedirLatOtraVezURSS:
+    call pedirLatitudSecreta
+    cmp valorLat,20
+    ja pedirLatOtraVezURSS
+    mov al, valorLat
+     
+    mov baseSecretaURSS[0], ah
+    mov baseSecretaURSS[1], al  
+
+ret    
+pedirBasesSecretas endp
+
+
+
+     
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Pide dos digitos
 ;
@@ -110,66 +230,14 @@ fin:
     ret
 pedirDosDigitos endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;           Pide dos digitos y no los muestra en pantalla
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;este proc lo usamos cuando el jugador ingresa la base secreta usamos la instruccion 07h.     
-
-pedirDosDigitosSecreto proc     
-    sub cl,cl                                                     
-    mov ah, 07h  ;No imprime la entrada en pantalla      
-pedirNumeroSecreto:
-        int 21h 
-        mov [bx], al     
-        inc cl ; es un contador
-        inc bx
-        cmp cl, cantDigitos
-        je finSecreto
-    jmp pedirNumeroSecreto   
-finSecreto:
-    ret
-pedirDosDigitosSecreto endp
 
 
-pedirLatitudSecreta proc  
-    mov ah,09
-    mov dx,offset msjy
-    int 21h 
-    
-    mov bx, offset latitud ;definimos a bx como puntero
-    
-    call pedirDosDigitosSecreto
-    
-    mov bx, offset latitud
-    call deAsciiAEntero
-    mov valorLat, ah
-    ret
-pedirLatitudSecreta endp
-
-
-pedirLongitudSecreta proc  
-    mov ah,09
-    mov dx,offset msjx
-    int 21h       
-    
-    mov bx, offset longitud
-    
-    call pedirDosDigitosSecreto
-     
-    mov bx, offset longitud
-    call deAsciiAEntero
-
-    mov valorLong, ah
-    ret
-pedirLongitudSecreta endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                 Pide Latitud
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
-
-   ;pedimos 2 n�meros con la instrucci�n 0ah. Pide la cantidad de caracteres que entra en el buffer. 
+;pedimos 2 numeros con la instruccion 0ah. 
 proc pedirLatitud  
     mov ah,09
     mov dx,offset msjy
@@ -182,16 +250,14 @@ proc pedirLatitud
     mov bx, offset latitud
     call deAsciiAEntero
     mov valorLat, ah
-    endp
-ret
+    ret
+pedirLatitud endp
 
          
          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                 Pide Longitud
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
-         
-
 proc pedirLongitud  
     mov ah,09
     mov dx,offset msjx
@@ -205,47 +271,11 @@ proc pedirLongitud
     call deAsciiAEntero
 
     mov valorLong, ah
-    endp
-ret
+    ret
+pedirLongitud endp
 
-proc pedirBasesSecretas
-  mov ah,09 
-  mov dx,offset msjbaseSecretaUSA 
-  int 21h
-                                          
-    
-  pedirLongOtraVezUSA:
-  call pedirLongitudSecreta 
-  mov ah, valorLong
-  mov al, valorLat
-  
-  cmp valorLong, 33  ;Se fija si ingreso un numero entre 0 y 33
-  jae pedirLongOtraVezUSA 
-  
-  call pedirLatitudSecreta
-  
-  mov baseSecretaUSA[0], ah
-  mov baseSecretaUSA[1], al  
-  
-  
-  mov ah,09 
-  mov dx,offset msjbaseSecretaURSS 
-  int 21h
-  
 
-pedirLongOtraURSS:  
-    call pedirLongitudSecreta
-    cmp valorLong,33
-jbe pedirLongOtraURSS
-
-  call pedirLatitudSecreta
-  mov al, valorLat
-  mov ah, valorLong 
-  mov baseSecretaURSS[0], ah
-  mov baseSecretaURSS[1], al  
-
-    endp
-ret 
+ 
 
          
 
@@ -253,8 +283,8 @@ ret
 proc pedirCoordenada
     call pedirLongitud
     call pedirLatitud
-    endp
-ret          
+    ret
+pedirCoordenada endp          
                    
  ;;;;;;;
  ;            Antes de llamar a esta funcion hacer mov bx, offset etiqueta a transformar
@@ -281,8 +311,8 @@ proc deAsciiAEntero
 fin3:
     mov base,1
     mov ah, valor 
-    endp 
-ret
+    ret
+deAsciiAEntero endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -300,9 +330,18 @@ proc deEnteroAAscii
     mov numeroEnAscii[0], al
     mov numeroEnAscii[1], ah
  
-    endp deEnteroAAscii
-ret
-    
+    ret
+deEnteroAAscii endp
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;    estaEnElMapa 
+;
+;dentroDelMapa = 1 si la coordenada esta en el mapa y 0 sino
+;hay que copiar valorLat a al y valor Long en bl para usarla
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 proc estaEnElMapa
     mov dentroDelMapa, 0
       
@@ -313,23 +352,24 @@ proc estaEnElMapa
 LatMayorA0:
     cmp al,19
     jbe LatMenorA19            ;salta solo si la latitud es menor a 19
-jmp NoEstaEnElMapa
+    jmp NoEstaEnElMapa
 
 LatMenorA19:
     cmp bl,0
     jae LongMayorA0            ;salta solo si la longitud es mayor a 0
-jmp NoEstaEnElMapa
+    jmp NoEstaEnElMapa
     
 LongMayorA0:
     cmp bl,73          ;comparamos con 73 porque en cada fila hay 74 caracteres pero empezamos a contar desde el cero
     jbe siEstaEnElMapa           ;sata solo si la longitud es menor a 74
-jmp NoEstaEnElMapa
+    jmp NoEstaEnElMapa
     
 siEstaEnElMapa:
     mov dentroDelMapa,1
+
 NoEstaEnElMapa:
-    endp
-ret
+    ret
+estaEnElMapa endp
     
 proc disparar
     mov al, valorLat
@@ -390,8 +430,8 @@ mensajeFueraDelMapa:
     int 21h
                 
 finDisparo:
-endp
-ret
+    ret
+disparar endp
  
 
 proc contamosW 
@@ -412,33 +452,43 @@ contamosW endp
 
           
 
-proc hayW
+proc gameOver
     cmp cantWDeUSA,0
     je usaPierde
     
     cmp cantWDeURSS,0
     je urssPierde
     
-    jmp siHayW 
+    jmp enJuego 
 
 usaPierde:
     mov ah,09h
-    mov dx, offset usaPierde
-    int 21h      
+    mov dx, offset msjUSAPierde
+    int 21h 
+    mov hayGanador, 1
+    jmp enJuego
+         
 urssPierde:
     mov ah,09h
-    mov dx, offset urssPierde
-    int 21h      
+    mov dx, offset msjURSSPierde
+    int 21h
+    mov hayGanador, 1
 
-siHayW:
-endp
-ret  
+enJuego:
+    ret
+gameOver endp
+
+
 
 proc actualizarSiguienteTurno
     xor turno, 1
 ret 
 actualizarSiguienteTurno endp
-         
+;;;;;;;;;;;;;;;;;;;
+;      Imprime la cantidad de W
+;      restantes para cada pais                  
+;
+;;;;;;;;;;;;;;;;;;;         
          
 proc imprimirW 
     sub ax, ax
@@ -481,22 +531,34 @@ imprimirJuegaURSS:
     mov dx, offset juegaURSS
     int 21h
 ret 
-informarPaisTurno endp                            
+informarPaisTurno endp 
 
-inicio:
-    call printMap
-    call pedirBasesSecretas
+proc eliminamosUSA
+    mov cantWDeUSA, 0
+    ret
+eliminamosUSA endp
+
+proc eliminamosURSS
+    mov cantWDeURSS, 0
+    ret
+eliminamosURSS endp
+
+
+inicio: 
+    ;call eliminamosUSA
+    ;call printMap
+    ;call pedirBasesSecretas
     call aleatorioBinario
-    seguirJugando:  
+    seguirJugando:
+        call informarPaisTurno  
         call pedirCoordenada 
         call disparar  
-        call printMap 
-        call hayW  
-         call imprimirW
+        call printMap
+        call imprimirW 
+        call gameOver  
         call actualizarSiguienteTurno
-        call informarPaisTurno
-        cmp usaTieneW,0
-        je finalDelJuego
+        cmp hayGanador,1
+        je finalDelJuego 
     jmp seguirJugando
 finalDelJuego:
 ret
