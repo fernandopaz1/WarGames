@@ -6,48 +6,65 @@ jmp inicio
 
 ;Definimos el mapa                    
 ;***************************************************************************************************
-rangoDeAleatorio    db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
-mapaArriba          db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13
-mapaAbajo           db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
-msjbaseSecretaUSA   db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
-msjbaseSecretaURSS  db 10,13,"Ingrese base secreta de URSS: ",10,13,"$"
-juegaUSA            db 10,13,10,13,"Juega UNITED STATES: ",10,13,"$"
-juegaURSS           db 10,13,10,13,"Juega SOVIET UNION: ",10,13,"$" 
-msjx                db 10,13,"Ingrese coordenada x:  ","$"
-msjy                db 10,13,"Ingrese coordenada y:  ","$"
-latitud             db ?,?,"$"
-longitud            db ?,?,"$"
-latitudSecreta      db ?,?,"$"
-longitudSecreta     db ?,?,"$"
-buffer              db 3 dup(?)
-cantDigitos         db 2          
-base                db 1 
-diez                db 10   
-valor               db ?   
-valorLong           db ?
-valorLat            db ?
-baseSecretaUSA      dw ?  ;Offset con respecto a mapaArriba que tiene la base secreta
-baseSecretaURSS     dw ?
-msjEnter            db " ",10,13,"$"
-cantidadDeColumnas  db 76
-cantidadDeFilas     db 19  
-dentroDelMapa       db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
-msjFueraDelMapa     db 10,13,10,13,"Coordenada fuera del mapa",10,13,"$"
-turno               db ?   ;1: usa     0:urss 
-usaTieneW           db 1
-urssTieneW          db 1
-msjBaseSecreta      db 10,13,10,13,"Base secreta bombardeada",10,13,"$"
-msjTerrenoEnemigo   db 10,13,10,13,"Terreno enemigo destruido",10,13,"$"
-msjUSAPierde        db 10,13,10,13,"Ha ganado la Uni",00A2h,"n Sovi",0082h,"tica",10,13,"$"
-msjURSSPierde       db 10,13,10,13,"Ha ganado Estados Unidos",10,13,"$"   
-cantWDeUSA          db 40
-cantWDeURSS         db 54
-numeroEnAscii       db ?, ?, "$"  
-msjCantWUSA         db 10,13,"Regiones restantes de USA:   ","$"
-msjCantWURSS        db 10,13,"Regiones restantes de URSS:  ","$"  
-errorNAN            db 0                                                             
-msjErrorNAN         db 10,13,"Error: El valor ingresado no es un n",00A3h,"mero","$"
-hayGanador          db 0
+    rangoDeAleatorio    db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
+    mapaArriba          db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13
+    mapaAbajo           db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
+    msjbaseSecretaUSA   db 10,13,"Ingrese base secreta de USA: ",10,13,"$"
+    msjbaseSecretaURSS  db 10,13,"Ingrese base secreta de URSS: ",10,13,"$"
+    juegaUSA            db 10,13,10,13,"Juega UNITED STATES: ",10,13,"$"
+    juegaURSS           db 10,13,10,13,"Juega SOVIET UNION: ",10,13,"$" 
+    msjx                db 10,13,"Ingrese coordenada x:  ","$"
+    msjy                db 10,13,"Ingrese coordenada y:  ","$"
+    latitud             db ?,?,"$"
+    longitud            db ?,?,"$"
+    latitudSecreta      db ?,?,"$"
+    longitudSecreta     db ?,?,"$"
+    buffer              db 3 dup(?)
+    cantDigitos         db 2          
+    base                db 1 
+    diez                db 10   
+    valor               db ?   
+    valorLong           db ?
+    valorLat            db ?
+    baseSecretaUSA      dw ?  ;Offset con respecto a mapaArriba que tiene la base secreta
+    baseSecretaURSS     dw ?
+    msjEnter            db " ",10,13,"$"
+    cantidadDeColumnas  db 76
+    cantidadDeFilas     db 19  
+    dentroDelMapa       db 0    ;Es una etiquta que usamos para ver si la coordenada esta en el mapa
+    msjFueraDelMapa     db 10,13,10,13,"Coordenada fuera del mapa",10,13,"$"
+    turno               db ?   ;1: usa     0:urss 
+    usaTieneW           db 1   ;1: tiene W    0: no tiene W
+    urssTieneW          db 1
+    msjBaseSecreta      db 10,13,10,13,"Base secreta bombardeada",10,13,"$"
+    msjTerrenoEnemigo   db 10,13,10,13,"Terreno enemigo destruido",10,13,"$"
+    msjUSAPierde        db 10,13,10,13,"Ha ganado la Uni",00A2h,"n Sovi",0082h,"tica",10,13,"$"
+    msjURSSPierde       db 10,13,10,13,"Ha ganado Estados Unidos",10,13,"$"   
+    cantWDeUSA          db 40
+    cantWDeURSS         db 54
+    numeroEnAscii       db ?, ?, "$"  
+    msjCantWUSA         db 10,13,"Regiones restantes de USA:   ","$"
+    msjCantWURSS        db 10,13,"Regiones restantes de URSS:  ","$"  
+    errorNAN            db 0                                                             
+    msjErrorNAN         db 10,13,"Error: El valor ingresado no es un n",00A3h,"mero","$"
+    hayGanador          db 0   ;0: no hay ganador   1:hay ganador
+    wEliminadasPorUSA   db 0
+    wEliminadasPorURSS  db 0 
+    
+    cantIntentosUSA     db 0
+    cantIntentosURSS    db 0
+    
+    ganador             db 0;   1: USA gana   2:URSS gana
+    
+    msjURSS             db "URSS"
+    msjUSA              db " USA"
+    
+    msjEstadistica      db "Ganador: ???? *Intentos: USA: ??;  URSS: ?? *W Borradas: USA: ??; URSS: ??"
+    longMsjEstadistica  db 74
+    estadistica         db "c:\tp\estadisticas.txt", 0
+    bufferdata          db 7 dup (0)
+    cont                db 0
+    handler             dw ?
 ;************************************************************************************
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -69,7 +86,7 @@ printMap endp
 ;              Decide quien juega
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
 
-proc aleatorioBinario        
+proc elegirTurno        
     mov ah,2ch   ;toma la hora del sistema y guarda en ch:hora, cl:min, dh:seg y dl:miliseg
     int 21h
     xor ah,ah    ;pongo ah en cero
@@ -78,7 +95,7 @@ proc aleatorioBinario
     mov turno, ah
 finAleatorio:    
     ret
-endp aleatorioBinario                        
+endp elegirTurno                        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;           Pide dos digitos y no los muestra en pantalla
@@ -442,6 +459,7 @@ mensajeFueraDelMapa:
     int 21h
                 
 finDisparo:
+    call contamosIntentos
     ret
 disparar endp
  
@@ -451,7 +469,18 @@ disparar endp
 ;Se llama solo dentro de la funcion disparar si eliminamos un W
 ;Calcula a quien pertenece ese W y se lo descuenta a dicho pais                  
 ;*************************************************         
-proc contamosW 
+proc contamosW
+    cmp turno, 1
+    je disparoUSA
+
+    inc wEliminadasPorURSS
+    jmp restamosW
+    
+disparoUSA:
+    inc wEliminadasPorUSA
+    
+         
+restamosW:     
     cmp valorLong, 25
     jbe estaEnUSA
     cmp valorLong, 35
@@ -467,14 +496,36 @@ terminamosConteo:
     ret 
 contamosW endp   
 
+;*****************************            
+;       contamosIntentos
+;Cuenta la cantidad de intentos de cada jugador
+;*****************************            
+proc contamosIntentos
+    cmp turno,1
+    je intentoUSA
+    inc cantIntentosURSS
+    jmp finIntento
+    
+intentoUSA:
+    inc cantIntentosUSA
+finIntento:    
+    ret
+contamosIntentos endp
+;*************************************************
+;               monitoreoBasesSecretas
+;
+;Se fija si alguna base secreta fue destruida
+;*************************************************         
+
 proc monitoreoBasesSecretas
     mov bx, baseSecretaUSA
     cmp mapaArriba[bx], " "
-    je baseUSADestruida
+    je baseUSADestruida 
     
     mov bx, baseSecretaURSS
     cmp mapaArriba[bx], " "
-    je baseURSSDestruida                             
+    je baseURSSDestruida
+    jmp basesMonitoreadas                             
     
 baseUSADestruida:
     mov ah,09h
@@ -482,7 +533,8 @@ baseUSADestruida:
     int 21h 
     mov dx, offset msjUSAPierde
     int 21h 
-    mov hayGanador, 1
+    mov hayGanador, 1 
+    mov ganador,2
     jmp basesMonitoreadas    
 baseURSSDestruida: 
     mov ah,09h
@@ -491,6 +543,7 @@ baseURSSDestruida:
     mov dx, offset msjURSSPierde
     int 21h 
     mov hayGanador, 1
+    mov ganador,1
    
 
 basesMonitoreadas:    
@@ -522,12 +575,14 @@ usaPierde:
     mov dx, offset msjUSAPierde
     int 21h 
     mov hayGanador, 1
+    mov ganador, 2
     jmp enJuego
          
 urssPierde:
     mov ah,09h
     mov dx, offset msjURSSPierde
     int 21h
+    mov ganador, 1
     mov hayGanador, 1
 
 enJuego:
@@ -624,7 +679,7 @@ eliminamosURSS endp
 proc initJuego
     call printMap
     call pedirBasesSecretas
-    call aleatorioBinario
+    call elegirTurno
     call informarPaisTurno    
     ret
 initJuego endp 
@@ -644,8 +699,161 @@ proc jugar
 finalDelJuego:  
     ret
 jugar endp
+
+
+proc modificarEstadistica
+    sub cx, cx
+    mov bx, offset msjEstadistica
+  
+    recorremosStats:
+    
+    cmp cl,9
+    je winner
+    
+    cmp cl,30
+    je intentosUSA
+    
+    cmp cl,41
+    je intentosURSS
+    
+    cmp cl,62
+    je wBorradosPorUSA
+    
+    cmp cl,72
+    je wBorradosPorURSS
+
+    seguimosStats:
+    
+    inc bx
+    inc cx
+    cmp cl,longMsjEstadistica
+    jae finStats
+    jmp recorremosStats
+
+winner:
+    cmp ganador,1
+    je  escribirUSA
+                       
+    mov al, msjURSS[0]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al, msjURSS[1]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al, msjURSS[2]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al, msjURSS[3]
+    mov [bx], al
+
+    jmp seguimosStats
+    
+escribirUSA:
+    
+    mov al, msjUSA[0]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al, msjUSA[1]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al, msjUSA[2]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al, msjUSA[3]
+    mov [bx], al
+    jmp seguimosStats
+    
+intentosUSA:
+    sub ax, ax
+    mov al, cantIntentosUSA
+    call deEnteroAAScii
+    mov al,numeroEnAscii[0]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al,numeroEnAscii[1]
+    mov [bx], al
+    jmp seguimosStats
+    
+intentosURSS:
+    sub ax, ax
+    mov al, cantIntentosURSS
+    call deEnteroAAScii
+    mov al,numeroEnAscii[0]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al,numeroEnAscii[1]
+    mov [bx], al
+    jmp seguimosStats
+    
+wBorradosPorUSA:    
+    sub ax, ax
+    mov al, wEliminadasPorUSA
+    call deEnteroAAScii
+    mov al,numeroEnAscii[0]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al,numeroEnAscii[1]
+    mov [bx], al
+    jmp seguimosStats
+    
+wBorradosPorURSS:
+    
+    sub ax, ax
+    mov al, wEliminadasPorURSS
+    call deEnteroAAScii
+    mov al,numeroEnAscii[0]
+    mov [bx], al
+    inc cx
+    inc bx
+    mov al,numeroEnAscii[1]
+    mov [bx], al
+    jmp seguimosStats
+        
+finStats:    
+    ret
+modificarEstadistica endp
+           
+          
+               
+proc guardarStats
+  call modificarEstadistica
+;creamos un archivo.
+  mov  ah, 3ch
+  mov  cx, 0
+  mov  dx, offset estadistica
+  int  21h  
+
+;guardamos el handler retornado.
+  mov  handler, ax
+
+;escribimos los datos.
+  mov  ah, 40h
+  mov  bx, handler
+  mov  cx, 74  
+  mov  dx, offset msjEstadistica
+  int  21h
+
+;cerramos archvo.
+  mov  ah, 3eh
+  mov  bx, handler
+  int  21h      
+
+   
+error:                     ;
+    ret
+guardarStats endp
  
 inicio: 
     call initJuego 
     call jugar
+    call guardarStats
 ret
