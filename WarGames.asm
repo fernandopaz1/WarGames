@@ -1,7 +1,3 @@
-          
-; You may customize this and other start-up templates; 
-; The location of this template is c:\emu8086\inc\0_com_template.txt
-
 org 100h
 
 
@@ -9,7 +5,7 @@ org 100h
 jmp inicio
 
 ;Definimos el mapa                    
-
+;***************************************************************************************************
 rangoDeAleatorio    db 2    ;Con esto fijamos entre que valores obtenemos el resultado de aleatorio
 mapaArriba          db "00..........................WAR GAMES - 1983..............................",10,13,"01.......-.....:**:::*=-..-++++:............:--::=WWW***+-++-.............",10,13,"02...:=WWWWWWW=WWW=:::+:..::...--....:=+W==WWWWWWWWWWWWWWWWWWWWWWWW+-.....",10,13,"03..-....:WWWWWWWW=-=WW*.........--..+::+=WWWWWWWWWWWWWWWWWWWW:..:=.......",10,13,"04.......+WWWWWW*+WWW=-:-.........-+*=:::::=W*W=WWWW*++++++:+++=-.........",10,13,"05......*WWWWWWWWW=..............::..-:--+++::-++:::++++++++:--..-........",10,13,"06.......:**WW=*=...............-++++:::::-:+::++++++:++++++++............",10,13,"07........-+:...-..............:+++++::+:++-++::-.-++++::+:::-............",10,13,"08..........--:-...............::++:+++++++:-+:.....::...-+:...-..........",10,13
 mapaAbajo           db "09..............-+++:-..........:+::+::++++++:-......-....-...---.........",10,13,"10..............:::++++:-............::+++:+:.............:--+--.-........",10,13,"11..............-+++++++++:...........+:+::+................--.....---....",10,13,"12................:++++++:...........-+::+::.:-................-++:-:.....",10,13,"13.................++::+-.............::++:..:...............++++++++-....",10,13,"14.................:++:-...............::-..................-+:--:++:.....",10,13,"15.................:+-............................................-.....--",10,13,"16.................:....................................................--",10,13,"17.......UNITED STATES.........................SOVIET UNION...............",10,13,"18........................................................................",10,13,"19  5   9   13   18   23   28   33   38   43   48   53   58   63   68   73",10,13,10,13,"$"
@@ -30,8 +26,8 @@ diez                db 10
 valor               db ?   
 valorLong           db ?
 valorLat            db ?
-baseSecretaUSA      db ?,?,"$"  ;En el primero esta la longitud y en el segudo la latitud
-baseSecretaURSS     db ?,?,"$"
+baseSecretaUSA      dw ?  ;Offset con respecto a mapaArriba que tiene la base secreta
+baseSecretaURSS     dw ?
 msjEnter            db " ",10,13,"$"
 cantidadDeColumnas  db 76
 cantidadDeFilas     db 19  
@@ -40,8 +36,10 @@ msjFueraDelMapa     db 10,13,10,13,"Coordenada fuera del mapa",10,13,"$"
 turno               db ?   ;1: usa     0:urss 
 usaTieneW           db 1
 urssTieneW          db 1
-msjUSAPierde        db 10,13,10,13,"Ha ganado la Union Sovietica",10,13,"$"
-msjURSSPierde       db 10,13,10,13,"Ha ganado la Estados Unidos",10,13,"$"   
+msjBaseSecreta      db 10,13,10,13,"Base secreta bombardeada",10,13,"$"
+msjTerrenoEnemigo   db 10,13,10,13,"Terreno enemigo destruido",10,13,"$"
+msjUSAPierde        db 10,13,10,13,"Ha ganado la Uni",00A2h,"n Sovi",0082h,"tica",10,13,"$"
+msjURSSPierde       db 10,13,10,13,"Ha ganado Estados Unidos",10,13,"$"   
 cantWDeUSA          db 40
 cantWDeURSS         db 54
 numeroEnAscii       db ?, ?, "$"  
@@ -50,6 +48,7 @@ msjCantWURSS        db 10,13,"Regiones restantes de URSS:  ","$"
 errorNAN            db 0                                                             
 msjErrorNAN         db 10,13,"Error: El valor ingresado no es un n",00A3h,"mero","$"
 hayGanador          db 0
+;************************************************************************************
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;              Imprime el mapa del juego
@@ -85,8 +84,6 @@ endp aleatorioBinario
 ;           Pide dos digitos y no los muestra en pantalla
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;este proc lo usamos cuando el jugador ingresa la base secreta usamos la instruccion 07h.     
-
 pedirDosDigitosSecreto proc     
     sub cl,cl                                                     
     mov ah, 07h  ;No imprime la entrada en pantalla      
@@ -146,31 +143,34 @@ pedirLongitudSecreta endp
 ;      Pide coordenadas de bases secretas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
 proc pedirBasesSecretas
-  mov ah,09 
-  mov dx,offset msjbaseSecretaUSA 
-  int 21h
+    mov ah,09 
+    mov dx,offset msjbaseSecretaUSA 
+    int 21h
                                           
     
 pedirLongOtraVezUSA:
-  call pedirLongitudSecreta 
-  cmp valorLong, 33  ;Se fija si ingreso un numero entre 0 y 33
-  jae pedirLongOtraVezUSA 
-  mov ah, valorLong
+    call pedirLongitudSecreta 
+    cmp valorLong, 33  ;Se fija si ingreso un numero entre 0 y 33
+    jae pedirLongOtraVezUSA 
+    mov ah, valorLong
 
 pedirLatOtraVezUSA:
     call pedirLatitudSecreta
     cmp valorLat, 19
     ja pedirLatOtraVezUSA
     mov al, valorLat
-    
-    mov baseSecretaUSA[0], ah
-    mov baseSecretaUSA[1], al  
+  
+    sub bx, bx
+    mov bl, ah
+    mul cantidadDeColumnas 
+    add bx, ax
+    mov baseSecretaUSA, bx
+
     
     
     mov ah,09 
     mov dx,offset msjbaseSecretaURSS 
     int 21h
-  
 
 pedirLongOtraVezURSS:  
     call pedirLongitudSecreta
@@ -187,9 +187,13 @@ pedirLatOtraVezURSS:
     ja pedirLatOtraVezURSS
     mov al, valorLat
      
-    mov baseSecretaURSS[0], ah
-    mov baseSecretaURSS[1], al  
+    sub bx, bx
+    mov bl, ah
+    mul cantidadDeColumnas 
+    add bx, ax
+    mov baseSecretaURSS, bx
 
+    
 ret    
 pedirBasesSecretas endp
 
@@ -197,13 +201,13 @@ pedirBasesSecretas endp
 
      
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;              Pide dos digitos
+;********************************************************
+;                 pedirLatitud
 ;
-; bx: offset de la etiqueda donde se guardan los digitos
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
-pedirDosDigitos proc    
+; Antes de llamar a a este proc
+;copiar en bx el offset de la etiqueda donde se guardan los digitos
+;********************************************************
+proc pedirDosDigitos    
     sub cl,cl
     mov ah, 01h
     mov errorNAN, 0    
@@ -231,13 +235,12 @@ fin:
 pedirDosDigitos endp
 
 
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                 Pide Latitud
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
-;pedimos 2 numeros con la instruccion 0ah. 
+;********************************************************
+;                 pedirLatitud
+;
+; Pide al usuario dos digitos, los transforma a binario
+; y guarda el resultado en valorLat
+;********************************************************   
 proc pedirLatitud  
     mov ah,09
     mov dx,offset msjy
@@ -255,9 +258,12 @@ pedirLatitud endp
 
          
          
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                 Pide Longitud
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+;********************************************************
+;                 pedirLongitud
+;
+; Pide al usuario dos digitos, los transforma a binario
+; y guarda el resultado en valorLong
+;********************************************************   
 proc pedirLongitud  
     mov ah,09
     mov dx,offset msjx
@@ -286,15 +292,16 @@ proc pedirCoordenada
     ret
 pedirCoordenada endp          
                    
- ;;;;;;;
- ;            Antes de llamar a esta funcion hacer mov bx, offset etiqueta a transformar
- 
- ;;; Guarda el resultado transformado en AH;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;,;,,;,,;
+;********************************************************
+;              deAsciiAEntero 
+;
+; copiamos el offset de la etiqueta a transformar en bx
+; Guarda el resultado transformado en AH
+;********************************************************
 proc deAsciiAEntero
     sub cl, cl
     add bx, 1  
-    mov valor, 0   ;; limpiamos valor para que cuando tenga otro llamado este limpia.
+    mov valor, 0   ; limpiamos valor para reutilizar la etiqueta.
     ciclo:
         mov al, [bx]
         sub al, 30h
@@ -315,12 +322,12 @@ fin3:
 deAsciiAEntero endp
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;********************************************************
 ;    deEnteroAAscii
 ;
 ;guardamos en AX el entero a transformmar
 ;El resultado se guarda en la etiqueta numeroEnAscii
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;********************************************************
     
 proc deEnteroAAscii
     div diez
@@ -335,12 +342,12 @@ deEnteroAAscii endp
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;    estaEnElMapa 
+;********************************************************
+;                   estaEnElMapa 
 ;
-;dentroDelMapa = 1 si la coordenada esta en el mapa y 0 sino
+;Pone dentroDelMapa = 1 si la coordenada esta en el mapa y 0 sino
 ;hay que copiar valorLat a al y valor Long en bl para usarla
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;********************************************************
 
 proc estaEnElMapa
     mov dentroDelMapa, 0
@@ -370,7 +377,16 @@ siEstaEnElMapa:
 NoEstaEnElMapa:
     ret
 estaEnElMapa endp
-    
+
+;*************************************************
+;               disparar
+;
+;Reemplaza en el mapa la coordenada (valorLat,valorLong) y
+; sus vecinos por " ", siempre y cuando esten en el mapa
+;
+;Si reemplaza algun W llama a contamosW para descontar
+;puntaje al pais correspondiente                  
+;*************************************************             
 proc disparar
     mov al, valorLat
     mov bl, valorLong
@@ -408,8 +424,6 @@ siguientePosicion:
             cmp ch,3
             je finDisparo
         jmp iteramosLatitud
-
-
 puedoDisparar: 
     mul cantidadDeColumnas       ;multiplicamos la cantidand de columnas con la latitud                             
     add bx,ax          ;sumamos ambos para ver el indice  
@@ -422,8 +436,6 @@ seguimosDisparando:
 encontramosW:
     call contamosW
     jmp seguimosDisparando
-
-
 mensajeFueraDelMapa:
     mov ah,09 
     mov dx,offset msjFueraDelMapa 
@@ -433,7 +445,12 @@ finDisparo:
     ret
 disparar endp
  
-
+;*************************************************
+;               contamosW
+;
+;Se llama solo dentro de la funcion disparar si eliminamos un W
+;Calcula a quien pertenece ese W y se lo descuenta a dicho pais                  
+;*************************************************         
 proc contamosW 
     cmp valorLong, 25
     jbe estaEnUSA
@@ -450,9 +467,48 @@ terminamosConteo:
     ret 
 contamosW endp   
 
+proc monitoreoBasesSecretas
+    mov bx, baseSecretaUSA
+    cmp mapaArriba[bx], " "
+    je baseUSADestruida
+    
+    mov bx, baseSecretaURSS
+    cmp mapaArriba[bx], " "
+    je baseURSSDestruida                             
+    
+baseUSADestruida:
+    mov ah,09h
+    mov dx, offset msjBaseSecreta
+    int 21h 
+    mov dx, offset msjUSAPierde
+    int 21h 
+    mov hayGanador, 1
+    jmp basesMonitoreadas    
+baseURSSDestruida: 
+    mov ah,09h
+    mov dx, offset msjBaseSecreta
+    int 21h 
+    mov dx, offset msjURSSPierde
+    int 21h 
+    mov hayGanador, 1
+   
+
+basesMonitoreadas:    
+    ret
+monitoreoBasesSecretas endp
           
+;*************************************************
+;               gameOver
+;
+;si hay ganador imprime quien gana y copia 1 en hayGanador
+;si no hay ganador no cambia nada                  
+;*************************************************         
 
 proc gameOver
+    call monitoreoBasesSecretas
+    cmp hayGanador,1
+    je enJuego
+    
     cmp cantWDeUSA,0
     je usaPierde
     
@@ -483,14 +539,17 @@ gameOver endp
 proc actualizarSiguienteTurno
     xor turno, 1
 ret 
-actualizarSiguienteTurno endp
-;;;;;;;;;;;;;;;;;;;
-;      Imprime la cantidad de W
-;      restantes para cada pais                  
+actualizarSiguienteTurno endp  
+
+
+
+;*************************************************
+;               informarResultado
 ;
-;;;;;;;;;;;;;;;;;;;         
+;Imprime la cantidad de W restantes para cada pais                  
+;*************************************************         
          
-proc imprimirW 
+proc informarResultado 
     sub ax, ax
     mov al, cantWDeUSA
     call deEnteroAAscii
@@ -511,12 +570,16 @@ proc imprimirW
     mov dx, offset numeroEnAscii
     int 21h
     
-endp imprimirW
+endp informarResultado
 ret
     
  
-        
-                             
+;*************************************************
+;               informarPaisTurno       
+;      
+;Imprime el pais que tiene el turno actual                  
+;*************************************************         
+                                     
 proc informarPaisTurno
     cmp turno,1
     je imprimirJuegaUSA 
@@ -533,6 +596,14 @@ imprimirJuegaURSS:
 ret 
 informarPaisTurno endp 
 
+
+
+;********************************************************
+;             eliminamosUSA; eliminamosURSS
+; 
+;proc para debuggear y haciendo perder a algun jugador
+;********************************************************
+
 proc eliminamosUSA
     mov cantWDeUSA, 0
     ret
@@ -544,21 +615,37 @@ proc eliminamosURSS
 eliminamosURSS endp
 
 
-inicio: 
-    ;call eliminamosUSA
-    ;call printMap
-    ;call pedirBasesSecretas
+;********************************************************
+;                 initJuego
+; 
+;inicia el juego pidiendo bases secretas y dando el orden
+;de los jugadores
+;********************************************************
+proc initJuego
+    call printMap
+    call pedirBasesSecretas
     call aleatorioBinario
+    call informarPaisTurno    
+    ret
+initJuego endp 
+ 
+proc jugar
     seguirJugando:
-        call informarPaisTurno  
-        call pedirCoordenada 
-        call disparar  
         call printMap
-        call imprimirW 
-        call gameOver  
+        call informarPaisTurno
+        call pedirCoordenada
+        call disparar
+        call informarResultado
         call actualizarSiguienteTurno
+        call gameOver
         cmp hayGanador,1
         je finalDelJuego 
     jmp seguirJugando
-finalDelJuego:
+finalDelJuego:  
+    ret
+jugar endp
+ 
+inicio: 
+    call initJuego 
+    call jugar
 ret
