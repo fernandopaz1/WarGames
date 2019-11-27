@@ -47,7 +47,6 @@ jmp inicio
     msjCantWURSS        db 10,13,"Regiones restantes de URSS:  ","$"  
     errorNAN            db 0                                                             
     msjErrorNAN         db 10,13,"Error: El valor ingresado no es un n",00A3h,"mero","$"
-    hayGanador          db 0   ;0: no hay ganador   1:hay ganador
     wEliminadasPorUSA   db 0
     wEliminadasPorURSS  db 0 
     
@@ -62,14 +61,12 @@ jmp inicio
     msjEstadistica      db "Ganador: ???? *Intentos: USA: ??;  URSS: ?? *W Borradas: USA: ??; URSS: ??"
     longMsjEstadistica  db 74
     estadistica         db "c:\tp\estadisticas.txt", 0
-    bufferdata          db 7 dup (0)
-    cont                db 0
     handler             dw ?
-;************************************************************************************
+;**************************************************************************************************************
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;              Imprime el mapa del juego
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
+;******************************************************
+;              Imprime el mapa del juego              ;
+;******************************************************           
 
 printMap proc 
     mov ah,09
@@ -82,9 +79,9 @@ printMap endp
 
 
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;              Decide quien juega
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;           
+;*******************************************************
+;              Decide quien juega                      ;
+;*******************************************************           
 
 proc elegirTurno        
     mov ah,2ch   ;toma la hora del sistema y guarda en ch:hora, cl:min, dh:seg y dl:miliseg
@@ -97,10 +94,10 @@ finAleatorio:
     ret
 endp elegirTurno                        
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;           Pide dos digitos y no los muestra en pantalla
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;***********************************************************
+;           Pide dos digitos y no los muestra en pantalla  ;
+;                                                          ;
+;***********************************************************
 pedirDosDigitosSecreto proc     
     sub cl,cl                                                     
     mov ah, 07h  ;No imprime la entrada en pantalla      
@@ -117,9 +114,9 @@ finSecreto:
 pedirDosDigitosSecreto endp
               
               
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;           Pide latitud llamando a pedirDosDigitosSecreto
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;***********************************************************
+;           Pide latitud llamando a pedirDosDigitosSecreto ;
+;***********************************************************
 pedirLatitudSecreta proc  
     mov ah,09
     mov dx,offset msjy
@@ -136,9 +133,9 @@ pedirLatitudSecreta proc
 pedirLatitudSecreta endp
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;           Pide longitud llamando a pedirDosDigitosSecreto
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;**************************************************************
+;           Pide longitud llamando a pedirDosDigitosSecreto   ;
+;**************************************************************
 pedirLongitudSecreta proc  
     mov ah,09
     mov dx,offset msjx
@@ -156,9 +153,9 @@ pedirLongitudSecreta proc
 pedirLongitudSecreta endp
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;      Pide coordenadas de bases secretas
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+;*****************************************************
+;      Pide coordenadas de bases secretas            ;
+;*****************************************************   
 proc pedirBasesSecretas
     mov ah,09 
     mov dx,offset msjbaseSecretaUSA 
@@ -218,12 +215,12 @@ pedirBasesSecretas endp
 
      
 
-;********************************************************
-;                 pedirLatitud
-;
-; Antes de llamar a a este proc
-;copiar en bx el offset de la etiqueda donde se guardan los digitos
-;********************************************************
+;**********************************************************************
+;                 pedirLatitud                                        ;
+;                                                                     ;
+; Antes de llamar a a este proc                                       ;
+;copiar en bx el offset de la etiqueda donde se guardan los digitos   ;
+;**********************************************************************
 proc pedirDosDigitos    
     sub cl,cl
     mov ah, 01h
@@ -253,10 +250,10 @@ pedirDosDigitos endp
 
 
 ;********************************************************
-;                 pedirLatitud
-;
-; Pide al usuario dos digitos, los transforma a binario
-; y guarda el resultado en valorLat
+;                 pedirLatitud                          ;
+;                                                       ;
+; Pide al usuario dos digitos, los transforma a binario ;
+; y guarda el resultado en valorLat                     ;
 ;********************************************************   
 proc pedirLatitud  
     mov ah,09
@@ -276,10 +273,10 @@ pedirLatitud endp
          
          
 ;********************************************************
-;                 pedirLongitud
-;
-; Pide al usuario dos digitos, los transforma a binario
-; y guarda el resultado en valorLong
+;                 pedirLongitud                         ;
+;                                                       ;
+; Pide al usuario dos digitos, los transforma a binario ;
+; y guarda el resultado en valorLong                    ;
 ;********************************************************   
 proc pedirLongitud  
     mov ah,09
@@ -309,12 +306,12 @@ proc pedirCoordenada
     ret
 pedirCoordenada endp          
                    
-;********************************************************
-;              deAsciiAEntero 
-;
-; copiamos el offset de la etiqueta a transformar en bx
-; Guarda el resultado transformado en AH
-;********************************************************
+;********************************************************;
+;              deAsciiAEntero                            ;
+;                                                        ;
+; copiamos el offset de la etiqueta a transformar en bx  ;
+; Guarda el resultado transformado en AH                 ;
+;********************************************************;
 proc deAsciiAEntero
     sub cl, cl
     add bx, 1  
@@ -340,10 +337,10 @@ deAsciiAEntero endp
 
 
 ;********************************************************
-;    deEnteroAAscii
-;
-;guardamos en AX el entero a transformmar
-;El resultado se guarda en la etiqueta numeroEnAscii
+;    deEnteroAAscii                                     ;
+;                                                       ;
+;guardamos en AX el entero a transformmar               ;
+;El resultado se guarda en la etiqueta numeroEnAscii    ;
 ;********************************************************
     
 proc deEnteroAAscii
@@ -359,12 +356,12 @@ deEnteroAAscii endp
 
 
 
-;********************************************************
-;                   estaEnElMapa 
-;
-;Pone dentroDelMapa = 1 si la coordenada esta en el mapa y 0 sino
-;hay que copiar valorLat a al y valor Long en bl para usarla
-;********************************************************
+;*********************************************************************;
+;                   estaEnElMapa                                      ;
+;                                                                     ;
+;Pone dentroDelMapa = 1 si la coordenada esta en el mapa y 0 sino     ;
+;hay que copiar valorLat a al y valor Long en bl para usarla          ;
+;**********************************************************************
 
 proc estaEnElMapa
     mov dentroDelMapa, 0
@@ -395,15 +392,15 @@ NoEstaEnElMapa:
     ret
 estaEnElMapa endp
 
-;*************************************************
-;               disparar
-;
-;Reemplaza en el mapa la coordenada (valorLat,valorLong) y
-; sus vecinos por " ", siempre y cuando esten en el mapa
-;
-;Si reemplaza algun W llama a contamosW para descontar
-;puntaje al pais correspondiente                  
-;*************************************************             
+;************************************************************;
+;               disparar                                     ;
+;                                                            ;
+;Reemplaza en el mapa la coordenada (valorLat,valorLong) y   ;
+; sus vecinos por " ", siempre y cuando esten en el mapa     ;
+;                                                            ;
+;Si reemplaza algun W llama a contamosW para descontar       ;
+;puntaje al pais correspondiente                             ;
+;*************************************************************             
 proc disparar
     mov al, valorLat
     mov bl, valorLong
@@ -463,12 +460,12 @@ finDisparo:
     ret
 disparar endp
  
-;*************************************************
-;               contamosW
-;
-;Se llama solo dentro de la funcion disparar si eliminamos un W
-;Calcula a quien pertenece ese W y se lo descuenta a dicho pais                  
-;*************************************************         
+;*****************************************************************;
+;               contamosW                                         ;
+;                                                                 ;
+;Se llama solo dentro de la funcion disparar si eliminamos un W   ;
+;Calcula a quien pertenece ese W y se lo descuenta a dicho pais   ;              
+;******************************************************************                
 proc contamosW
     cmp turno, 1
     je disparoUSA
@@ -496,10 +493,10 @@ terminamosConteo:
     ret 
 contamosW endp   
 
-;*****************************            
-;       contamosIntentos
-;Cuenta la cantidad de intentos de cada jugador
-;*****************************            
+;***************************************************************************;           
+;       contamosIntentos                                                    ;
+;Cuenta la cantidad de intentos de cada jugador                             ;
+;****************************************************************************                                            *;
 proc contamosIntentos
     cmp turno,1
     je intentoUSA
@@ -511,11 +508,11 @@ intentoUSA:
 finIntento:    
     ret
 contamosIntentos endp
-;*************************************************
-;               monitoreoBasesSecretas
-;
-;Se fija si alguna base secreta fue destruida
-;*************************************************         
+;*************************************************;
+;               monitoreoBasesSecretas            ;
+;                                                 ;
+;Se fija si alguna base secreta fue destruida     ;
+;*************************************************;         
 
 proc monitoreoBasesSecretas
     mov bx, baseSecretaUSA
@@ -533,7 +530,6 @@ baseUSADestruida:
     int 21h 
     mov dx, offset msjUSAPierde
     int 21h 
-    mov hayGanador, 1 
     mov ganador,2
     jmp basesMonitoreadas    
 baseURSSDestruida: 
@@ -542,7 +538,6 @@ baseURSSDestruida:
     int 21h 
     mov dx, offset msjURSSPierde
     int 21h 
-    mov hayGanador, 1
     mov ganador,1
    
 
@@ -550,17 +545,17 @@ basesMonitoreadas:
     ret
 monitoreoBasesSecretas endp
           
-;*************************************************
-;               gameOver
-;
-;si hay ganador imprime quien gana y copia 1 en hayGanador
-;si no hay ganador no cambia nada                  
-;*************************************************         
+;**********************************************************;         
+;               gameOver                                   ;
+;                                                          ;
+;si hay ganador imprime quien gana y copia 1 en hayGanador ;
+;si no hay ganador no cambia nada                          ;
+;***********************************************************         
 
 proc gameOver
     call monitoreoBasesSecretas
-    cmp hayGanador,1
-    je enJuego
+    cmp ganador,0
+    jne enJuego
     
     cmp cantWDeUSA,0
     je usaPierde
@@ -574,7 +569,6 @@ usaPierde:
     mov ah,09h
     mov dx, offset msjUSAPierde
     int 21h 
-    mov hayGanador, 1
     mov ganador, 2
     jmp enJuego
          
@@ -583,7 +577,7 @@ urssPierde:
     mov dx, offset msjURSSPierde
     int 21h
     mov ganador, 1
-    mov hayGanador, 1
+    
 
 enJuego:
     ret
@@ -598,11 +592,11 @@ actualizarSiguienteTurno endp
 
 
 
-;*************************************************
-;               informarResultado
-;
-;Imprime la cantidad de W restantes para cada pais                  
-;*************************************************         
+;***************************************************;
+;               informarResultado                   ;
+;                                                   ;
+;Imprime la cantidad de W restantes para cada pais  ;               
+;***************************************************;         
          
 proc informarResultado 
     sub ax, ax
@@ -629,11 +623,11 @@ endp informarResultado
 ret
     
  
-;*************************************************
-;               informarPaisTurno       
-;      
-;Imprime el pais que tiene el turno actual                  
-;*************************************************         
+;*************************************************;
+;               informarPaisTurno                 ;
+;                                                 ;
+;Imprime el pais que tiene el turno actual        ;          
+;*************************************************;        
                                      
 proc informarPaisTurno
     cmp turno,1
@@ -653,11 +647,11 @@ informarPaisTurno endp
 
 
 
-;********************************************************
-;             eliminamosUSA; eliminamosURSS
-; 
-;proc para debuggear y haciendo perder a algun jugador
-;********************************************************
+;********************************************************;
+;             eliminamosUSA; eliminamosURSS              ;
+;                                                        ;
+;proc para debuggear y haciendo perder a algun jugador   ;
+;********************************************************;
 
 proc eliminamosUSA
     mov cantWDeUSA, 0
@@ -670,12 +664,12 @@ proc eliminamosURSS
 eliminamosURSS endp
 
 
-;********************************************************
-;                 initJuego
-; 
-;inicia el juego pidiendo bases secretas y dando el orden
-;de los jugadores
-;********************************************************
+;*********************************************************;
+;                 initJuego                               ;
+;                                                         ;
+;inicia el juego pidiendo bases secretas y dando el orden ;
+;de los jugadores                                         ;
+;**********************************************************
 proc initJuego
     call printMap
     call pedirBasesSecretas
@@ -693,14 +687,19 @@ proc jugar
         call informarResultado
         call actualizarSiguienteTurno
         call gameOver
-        cmp hayGanador,1
-        je finalDelJuego 
+        cmp ganador,0
+        jne finalDelJuego 
     jmp seguirJugando
 finalDelJuego:  
     ret
 jugar endp
 
-
+;*********************************************************;
+;                 modificarEstadistica                    ;
+;                                                         ;
+;Cambia la cadena a guardar en el archivo poniendo los    ;
+;valores en ascii que se corresponden                     ;
+;**********************************************************
 proc modificarEstadistica
     sub cx, cx
     mov bx, offset msjEstadistica
@@ -782,7 +781,7 @@ intentosUSA:
     jmp seguimosStats
     
 intentosURSS:
-    sub ax, ax
+    sub ax, ax                             ;cuenta la cantidad de intentos de URSS
     mov al, cantIntentosURSS
     call deEnteroAAScii
     mov al,numeroEnAscii[0]
@@ -805,11 +804,10 @@ wBorradosPorUSA:
     mov [bx], al
     jmp seguimosStats
     
-wBorradosPorURSS:
-    
+wBorradosPorURSS: 
     sub ax, ax
-    mov al, wEliminadasPorURSS
-    call deEnteroAAScii
+    mov al, wEliminadasPorURSS         ;cuenta la cantidad de w eliminadas por URSS y 
+    call deEnteroAAScii                 ;las transforma en enteros
     mov al,numeroEnAscii[0]
     mov [bx], al
     inc cx
@@ -820,11 +818,11 @@ wBorradosPorURSS:
         
 finStats:    
     ret
-modificarEstadistica endp
+modificarEstadistica endp    ; se modifica el string del inicio
            
           
                
-proc guardarStats
+proc guardarStats      ;guarda las estadisticas en un archivo
   call modificarEstadistica
 ;creamos un archivo.
   mov  ah, 3ch
@@ -848,9 +846,9 @@ proc guardarStats
   int  21h      
 
    
-error:                     ;
+error:                     
     ret
-guardarStats endp
+guardarStats endp       
  
 inicio: 
     call initJuego 
